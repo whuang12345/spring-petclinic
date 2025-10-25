@@ -1,4 +1,4 @@
-services:
+﻿services:
   server:
     build:
       context: .

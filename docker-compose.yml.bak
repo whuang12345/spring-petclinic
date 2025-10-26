@@ -16,7 +16,7 @@
         - action: rebuild
           path: .
   db:
-    image: postgres:15
+    image: postgres
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data

@@ -1,0 +1,507 @@
+{
+  "info": {
+    "_postman_id": "petclinic-api-collection",
+    "name": "Spring PetClinic REST API",
+    "description": "Complete REST API collection for Spring PetClinic",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Owners",
+      "item": [
+        {
+          "name": "List All Owners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners?page=1",
+              "host": ["{{base_url}}"],
+              "path": ["owners"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Owners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/search?lastName=Smith&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "search"],
+              "query": [
+                {
+                  "key": "lastName",
+                  "value": "Smith"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Owner by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"New York\",\n  \"telephone\": \"5551234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/owners",
+              "host": ["{{base_url}}"],
+              "path": ["owners"]
+            }
+          }
+        },
+        {
+          "name": "Update Owner",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"address\": \"456 Oak Avenue\",\n  \"city\": \"Boston\",\n  \"telephone\": \"6171234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/owners/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Owner",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pets",
+      "item": [
+        {
+          "name": "List Pets for Owner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets"]
+            }
+          }
+        },
+        {
+          "name": "Get Pet by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pets/1",
+              "host": ["{{base_url}}"],
+              "path": ["pets", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Pet for Owner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fluffy\",\n  \"birthDate\": \"2020-05-15\",\n  \"type\": {\n    \"id\": 1,\n    \"name\": \"Cat\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets"]
+            }
+          }
+        },
+        {
+          "name": "Update Pet",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Whiskers\",\n  \"birthDate\": \"2020-06-20\",\n  \"type\": {\n    \"id\": 1,\n    \"name\": \"Cat\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Pet",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Visits",
+      "item": [
+        {
+          "name": "List Visits for Pet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1/visits",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1", "visits"]
+            }
+          }
+        },
+        {
+          "name": "Get Visit by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1/visits/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1", "visits", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-02-15\",\n  \"description\": \"Annual checkup and vaccinations\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1/visits",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1", "visits"]
+            }
+          }
+        },
+        {
+          "name": "Update Visit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-02-20\",\n  \"description\": \"Follow-up dental cleaning\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1/visits/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1", "visits", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Visit",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/owners/1/pets/1/visits/1",
+              "host": ["{{base_url}}"],
+              "path": ["owners", "1", "pets", "1", "visits", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vets",
+      "item": [
+        {
+          "name": "List All Vets (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vets?page=1",
+              "host": ["{{base_url}}"],
+              "path": ["vets"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List All Vets (Simple)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vets/all",
+              "host": ["{{base_url}}"],
+              "path": ["vets", "all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pet Types",
+      "item": [
+        {
+          "name": "List All Pet Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pet-types",
+              "host": ["{{base_url}}"],
+              "path": ["pet-types"]
+            }
+          }
+        },
+        {
+          "name": "Get Pet Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pet-types/1",
+              "host": ["{{base_url}}"],
+              "path": ["pet-types", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Pet Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Guinea Pig\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pet-types",
+              "host": ["{{base_url}}"],
+              "path": ["pet-types"]
+            }
+          }
+        },
+        {
+          "name": "Update Pet Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Guinea Pig - Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pet-types/1",
+              "host": ["{{base_url}}"],
+              "path": ["pet-types", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Pet Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pet-types/1",
+              "host": ["{{base_url}}"],
+              "path": ["pet-types", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Specialties",
+      "item": [
+        {
+          "name": "List All Specialties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/specialties",
+              "host": ["{{base_url}}"],
+              "path": ["specialties"]
+            }
+          }
+        },
+        {
+          "name": "Get Specialty by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/specialties/1",
+              "host": ["{{base_url}}"],
+              "path": ["specialties", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Specialty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Orthopedics\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/specialties",
+              "host": ["{{base_url}}"],
+              "path": ["specialties"]
+            }
+          }
+        },
+        {
+          "name": "Update Specialty",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Orthopedic Surgery\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/specialties/1",
+              "host": ["{{base_url}}"],
+              "path": ["specialties", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Specialty",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/specialties/1",
+              "host": ["{{base_url}}"],
+              "path": ["specialties", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    }
+  ]
+}

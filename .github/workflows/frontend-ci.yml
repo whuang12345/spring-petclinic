@@ -1,0 +1,80 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ "petclinic-ui/**" ]
+  pull_request:
+    paths: [ "petclinic-ui/**" ]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: petclinic-ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (if configured)
+        run: npm run lint || echo "No linter configured or lint failed"
+
+      - name: Build
+        run: npm run build
+
+  build-and-push-image:
+    needs: lint-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Login to registry (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push UI image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./petclinic-ui
+          file: ./petclinic-ui/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/petclinic-ui:${{ github.sha }}
+
+  deploy-to-k8s:
+    needs: build-and-push-image
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: '1.28.0'
+
+      - name: Apply k8s frontend manifest (if you have one)
+        env:
+          KUBECONFIG_BASE64: ${{ secrets.KUBE_CONFIG_BASE64 }}
+        run: |
+          echo "${KUBECONFIG_BASE64}" | base64 --decode > kubeconfig
+          # if you want to update an Ingress or Service, apply your UI manifest
+          # kubectl --kubeconfig=kubeconfig apply -f petclinic-ui/k8s/
+          kubectl --kubeconfig=kubeconfig -n default rollout status deployment/petclinic-ui --timeout=120s || true

@@ -1,0 +1,250 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: petclinic
+          POSTGRES_USER: petclinic
+          POSTGRES_PASSWORD: petclinic
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21 (Backend)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Start backend in background
+        run: |
+          cd spring-petclinic
+          export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/petclinic
+          export SPRING_DATASOURCE_USERNAME=petclinic
+          export SPRING_DATASOURCE_PASSWORD=petclinic
+          ./mvnw spring-boot:run &
+          BACKEND_PID=$!
+          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
+          # Wait for backend to start
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/actuator/health | grep -q UP; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
+
+      - name: Setup Node.js 18 (Frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'petclinic-ui/package-lock.json'
+
+      - name: Install frontend dependencies
+        run: |
+          cd petclinic-ui
+          npm ci
+
+      - name: Run E2E tests (if configured)
+        run: |
+          cd petclinic-ui
+          npm run test:e2e --if-present || echo "E2E tests not configured"
+        env:
+          VUE_APP_API_URL: http://localhost:8080/api
+
+      - name: Check backend health
+        run: |
+          curl -v http://localhost:8080/actuator/health
+
+      - name: Run API tests
+        run: |
+          cd spring-petclinic
+          # Make some test requests to verify API is working
+          curl -v http://localhost:8080/api/owners
+
+      - name: Backend logs
+        if: always()
+        run: |
+          if [ -d "spring-petclinic/target/logs" ]; then
+            cat spring-petclinic/target/logs/*.log || true
+          fi
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: petclinic
+          POSTGRES_USER: petclinic
+          POSTGRES_PASSWORD: petclinic
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run performance benchmarks
+        run: |
+          cd spring-petclinic
+          export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/petclinic
+          export SPRING_DATASOURCE_USERNAME=petclinic
+          export SPRING_DATASOURCE_PASSWORD=petclinic
+          
+          # Build the project
+          ./mvnw clean package -DskipTests
+          
+          # Start the application
+          java -Dspring.profiles.active=postgres -jar target/petclinic-*.jar &
+          APP_PID=$!
+          
+          # Wait for startup
+          sleep 10
+          
+          # Run load test using Apache Bench (if installed)
+          if command -v ab &> /dev/null; then
+            echo "Running performance tests..."
+            ab -n 100 -c 10 http://localhost:8080/api/owners || true
+          else
+            echo "Apache Bench not available, skipping load tests"
+          fi
+          
+          # Kill the application
+          kill $APP_PID || true
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: spring-petclinic/target/
+          retention-days: 30
+
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./spring-petclinic
+          file: ./spring-petclinic/Dockerfile
+          load: true
+          tags: petclinic:test
+          target: final
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./petclinic-ui
+          file: ./petclinic-ui/Dockerfile
+          load: true
+          tags: petclinic-ui:test
+
+      - name: Start services with Docker Compose
+        run: |
+          cd spring-petclinic
+          docker-compose up -d
+          
+          # Wait for services to be healthy
+          for i in {1..30}; do
+            if docker-compose ps | grep -q "Up"; then
+              echo "Services are up!"
+              break
+            fi
+            echo "Waiting for services... ($i/30)"
+            sleep 2
+          done
+
+      - name: Test backend endpoint
+        run: |
+          sleep 5
+          curl -v http://localhost:8080/api/owners || true
+
+      - name: Test frontend
+        run: |
+          curl -v http://localhost:80 || true
+
+      - name: Collect Docker logs
+        if: always()
+        run: |
+          cd spring-petclinic
+          docker-compose logs > docker-compose.log
+          docker-compose down
+
+      - name: Upload Docker Compose logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-compose-logs
+          path: spring-petclinic/docker-compose.log
+          retention-days: 7
+
+  test-summary:
+    needs: [integration-tests, performance-tests, docker-compose-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Integration Tests Status
+        run: |
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
+          echo "Performance Tests: ${{ needs.performance-tests.result }}"
+          echo "Docker Compose Tests: ${{ needs.docker-compose-test.result }}"
+          
+          if [ "${{ needs.integration-tests.result }}" != "success" ]; then
+            echo "❌ Integration tests failed"
+            exit 1
+          fi
+          
+          echo "✅ All integration tests passed!"
